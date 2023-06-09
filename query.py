@@ -1,34 +1,35 @@
 if __name__ == "__main__":
-    import xmlrpc.client as xmlClient
-    gea = xmlClient.ServerProxy('http://geasouth.cl.gemini.edu/run/ArchiveDataServer.cgi')
-    
+    import requests
+
     from datetime import datetime
+    import random
     import sys
     
-    arch = int(sys.argv[1])
-    channels = sys.argv[2][1:-1].split(",")
-    n_channels = int(sys.argv[3])
-    time_range = int(sys.argv[4])
-    n_points = int(sys.argv[5])
-    mode = int(sys.argv[6])
+    channels = ['elDemandPos','elCurrentPos','azDemandPos']
+    selected_channel = channels[random.randint(0,2)]
 
-    twf = datetime.now().timestamp()
-    twi = twf - (60*time_range)
+    n_channels = sys.argv[1]
+    time_range = int(sys.argv[2])
+    n_points = int(sys.argv[3])
+    mode = int(sys.argv[4])
 
-    channels = channels[:n_channels]
-
+    twf = 1686341999699
+    
+    twi = twf - (60000*time_range)
+    twi = int(twi)
+    
+    # print(datetime.fromtimestamp(twi/1000))
+    # print(datetime.fromtimestamp(twf/1000))
 
     ti = datetime.now()
-    geaRecord = gea.archiver.values(arch, channels,
-                                int(twi), 0,                            
-                                int(twf), 0,
-                                n_points, #max info retrived
-                                mode)
+
+    # GeaService (docker)
+    #x = requests.get(f'http://172.17.71.25:8000/values?from={twi}&to={twf}&archive=4819&channel=mc%3A{selected_channel}&value_mode={mode}&n_points={n_points}')
+
+    x = requests.get(f'http://172.17.71.25:8000/values?from={twi}&to={twf}&archive=4819&channel=%7Bmc%3AazPosError%2Cmc%3AelDemandPos%7D&value_mode={mode}&n_points={n_points}')
+
+    #print(f'http://172.17.71.25:8000/values?from={twi}&to={twf}&archive=4819&channel=mc%3AelCurrentPos&value_mode=3&n_points=30')    
     tf = datetime.now()
     td = tf-ti
     print(td)
-    # print(ti)
-    # print(datetime.fromtimestamp(ti))
-    # print(tf)
-    # print(datetime.fromtimestamp(tf))
     sys.stdout.flush()
